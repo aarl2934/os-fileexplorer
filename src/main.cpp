@@ -47,7 +47,7 @@ int main(int argc, char **argv)
     while (event.type != SDL_QUIT)
     {
         //list all the files in the current directory
-        //create files and put them in a list
+        
         // .. starts at y = 0
         // render every file until y + height of file = HEIGHT
         // on scroll event, change every y to -/+ height of a file
