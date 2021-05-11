@@ -46,6 +46,13 @@ int main(int argc, char **argv)
     SDL_WaitEvent(&event);
     while (event.type != SDL_QUIT)
     {
+        //list all the files in the current directory
+        //create files and put them in a list
+        // .. starts at y = 0
+        // render every file until y + height of file = HEIGHT
+        // on scroll event, change every y to -/+ height of a file
+        // on click event rerender in new folder or launch program
+        //
         SDL_WaitEvent(&event);
         switch(event.type){
             case SDL_MOUSEMOTION:
