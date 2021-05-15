@@ -1,14 +1,14 @@
 CXX= g++
-CXXFLAGS= -std=c++11
+CXXFLAGS= -std=c++11 -g
 
-INCLUDE= -I/usr/include/SDL2 -I./include
+INCLUDE= -I/usr/include/SDL2 -I./include/
 LIB= -lSDL2 -lSDL2_image -lSDL2_ttf
 
 SRCDIR= src
 OBJDIR= obj
 BINDIR= bin
 
-OBJS= $(addprefix $(OBJDIR)/, main.o)
+OBJS= $(addprefix $(OBJDIR)/, main.o file.o)
 EXEC= $(addprefix $(BINDIR)/, fileexplorer)
 
 # CREATE DIRECTORIES (IF DON'T ALREADY EXIST)
