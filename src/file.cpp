@@ -7,9 +7,10 @@
 
 
 
-File::File(std::string name, int y_pos){
+File::File(std::string n, int y_pos, std::string fp){
     y = y_pos * FILE_HEIGHT;
-    name = name;
+    name = n;
+    full_path = fp;
     filetype = FileType::other;
 }
 void File::initialize(SDL_Renderer *renderer){
@@ -18,7 +19,7 @@ void File::initialize(SDL_Renderer *renderer){
     SDL_Surface *phrase_surf = TTF_RenderText_Solid(font, name.c_str(), color);
     phrase = SDL_CreateTextureFromSurface(renderer, phrase_surf);
     SDL_FreeSurface(phrase_surf);
-    phrase_rect.x = 0;
+    phrase_rect.x = 30;
     phrase_rect.y = y;
     SDL_QueryTexture(phrase, NULL, NULL, &(phrase_rect.w), &(phrase_rect.h));
     SDL_Surface *img_surf;
@@ -42,13 +43,13 @@ void File::initialize(SDL_Renderer *renderer){
             img_surf = IMG_Load("resrc/other.png");
 
     }
-    setIcon(img_surf, renderer, getY());
+    setIcon(img_surf, renderer);
 }
-void File::setIcon(SDL_Surface *img_surf, SDL_Renderer *renderer, int y_pos){
+void File::setIcon(SDL_Surface *img_surf, SDL_Renderer *renderer){
     icon = SDL_CreateTextureFromSurface(renderer, img_surf);
     SDL_FreeSurface(img_surf);
-    icon_rect.x = 200;
-    icon_rect.y = y_pos * FILE_HEIGHT;
+    icon_rect.x = 0;
+    icon_rect.y = y;
     icon_rect.w = 25;
     icon_rect.h = 25;
 
@@ -56,6 +57,10 @@ void File::setIcon(SDL_Surface *img_surf, SDL_Renderer *renderer, int y_pos){
 
 int File::getY(){
     return y;
+}
+
+int File::getX(){
+    return x;
 }
 
 void File::setFileType(FileType ft){
@@ -80,24 +85,24 @@ TTF_Font* File::getFont(){
 //Subclasses constructors
 //=======================
 
-Executable::Executable(std::string name, SDL_Renderer *renderer, int y_pos):File(name, y_pos){
+Executable::Executable(std::string name, int y_pos, std::string full_path):File(name, y_pos, full_path){
         setFileType(FileType::exe);
         
 }
 
-Directory::Directory(std::string name, SDL_Renderer *renderer, int y_pos):File(name, y_pos){
+Directory::Directory(std::string name, int y_pos, std::string full_path):File(name, y_pos, full_path){
         setFileType(FileType::dir);
 }
 
-Video::Video(std::string name, SDL_Renderer *renderer, int y_pos):File(name, y_pos){
+Video::Video(std::string name,  int y_pos, std::string full_path):File(name, y_pos, full_path){
         setFileType(FileType::vid);
 
 }
 
-Image::Image(std::string name, SDL_Renderer *renderer, int y_pos):File(name, y_pos){
+Image::Image(std::string name, int y_pos, std::string full_path):File(name, y_pos, full_path){
         setFileType(FileType::img);
 
 }
-Code::Code(std::string name, SDL_Renderer *renderer, int y_pos):File(name, y_pos){
+Code::Code(std::string name,  int y_pos, std::string full_path):File(name, y_pos, full_path){
         setFileType(FileType::code);
 }

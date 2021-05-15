@@ -4,7 +4,7 @@
 #include <SDL_image.h>
 #include <SDL_ttf.h>
 #include <string>
-#define FILE_HEIGHT 20
+#define FILE_HEIGHT 30
 
 enum FileType : uint8_t {dir, exe, img, vid, code, other};
 
@@ -18,10 +18,12 @@ private:
     int y;
     FileType filetype;
     std::string name;
+    std::string full_path;
 public:
-    File(std::string name, int y_pos);
-    void setIcon(SDL_Surface *img_surf, SDL_Renderer *renderer, int y_pos);
+    File(std::string n, int y_pos, std::string full_path);
+    void setIcon(SDL_Surface *img_surf, SDL_Renderer *renderer);
     int getY();
+    int getX();
     void setFileType(FileType ft);
     void initialize(SDL_Renderer *renderer);
     
@@ -37,28 +39,28 @@ public:
 //Subclasses for the file types
 class Executable: public File{
     public:
-        Executable(std::string name, SDL_Renderer *renderer, int y_pos);
+        Executable(std::string name, int y_pos, std::string full_path);
 };
 
 
 class Directory: public File{
     public:
-        Directory(std::string name, SDL_Renderer *renderer, int y_pos);
+        Directory(std::string name, int y_pos, std::string full_path);
 };
 
 class Video: public File{
     public:
-        Video(std::string name, SDL_Renderer *renderer, int y_pos);
+        Video(std::string name, int y_pos, std::string full_path);
 };
 
 
 class Image: public File{
     public:
-        Image(std::string name, SDL_Renderer *renderer, int y_pos);
+        Image(std::string name,  int y_pos, std::string full_path);
 };
 class Code: public File{
     public:
-        Code(std::string name, SDL_Renderer *renderer, int y_pos);
+        Code(std::string name, int y_pos, std::string full_path);
 };
 
 

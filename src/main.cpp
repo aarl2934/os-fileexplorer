@@ -55,13 +55,15 @@ int main(int argc, char **argv)
     // initialize and perform rendering loop
     AppData data;
     std::string current_directory = home;
-    printf("Creating files\n");
+
     std::vector<FileData*> file_names = getFileData(current_directory);
-    printf("Got file names\n");
+
     std::vector<File*> files = createFiles(file_names, renderer);
-    printf("Created files\n");
+
     initialize(renderer, files);
+    printf("initialized\n");
     render(renderer, files);
+    printf("rendered\n");
     SDL_Event event;
     SDL_WaitEvent(&event);
     
@@ -89,12 +91,13 @@ int main(int argc, char **argv)
                 break;
             case SDL_MOUSEBUTTONDOWN:
                 //printf("mouse down %d\n", event.button.button);
-                if(event.button.button == SDL_BUTTON_LEFT &&
+                for(File* file : files){
+                    if(event.button.button == SDL_BUTTON_LEFT &&
                     event.button.x >= data.phrase_rect.x &&
                     event.button.x <= data.phrase_rect.x + data.phrase_rect.w &&
                     event.button.y >= data.phrase_rect.y &&
                     event.button.y <= data.phrase_rect.y + data.phrase_rect.h ){
-                        data.phrase_selected = true;
+                        current_directory = 
                         data.offset.x = event.button.x - data.phrase_rect.x;
                         data.offset.y = event.button.y - data.phrase_rect.y;
 
@@ -108,6 +111,8 @@ int main(int argc, char **argv)
                         data.offset.x = event.button.x - data.penguin_rect.x;
                         data.offset.y = event.button.y - data.penguin_rect.y;
                     }
+                }
+                
 
                 break;
             case SDL_MOUSEBUTTONUP:
@@ -149,9 +154,11 @@ void render(SDL_Renderer *renderer, std::vector<File*> files)
     
 
     for(File* file : files){
+        if(file->getY() > HEIGHT){
+            continue;
+        }
         SDL_RenderCopy(renderer, file->getIcon(), NULL, file->getIconRect());
         SDL_RenderCopy(renderer, file->getPhrase(), NULL, file->getPhraseRect());
-        break;
     }
     // show rendered frame
     SDL_RenderPresent(renderer);
@@ -187,22 +194,26 @@ std::vector<FileData*> getFileData(std::string dirname){
            
             list.push_back(entry->d_name);
         }
-
+        std::sort(list.begin(), list.end());
         for(int i = 0; i < list.size(); i++){
-            FileData filedata;
-            printf("%s \n", list[i].c_str());
+            if(list[i] == "."){
+                continue;
+            }
+            FileData* filedata = new FileData;
             std::string full_path = dirname + "/" + list[i];
-            filedata.full_path = full_path;
-            filedata.name = list[i];
+            filedata->full_path = full_path;
+            filedata->name = list[i];
             err = stat(full_path.c_str(), &fileinfo);
+            filedata->isDirectory = false;
+            filedata->isExecuteble = false;
             if(err){
 
             }else if(S_ISDIR(fileinfo.st_mode)){
-                filedata.isDirectory = true;   
-            }else if(S_IEXEC){
-                filedata.isExecuteble = true;
+                filedata->isDirectory = true;   
+            }else if((fileinfo.st_mode & S_IEXEC) != 0){
+                filedata->isExecuteble = true;
             }
-            file_list.push_back(&filedata);
+            file_list.push_back(filedata);
         }
     }
     return file_list;
@@ -211,28 +222,26 @@ std::vector<File*> createFiles(std::vector<FileData*> file_data, SDL_Renderer *r
     std::vector<File*> files;
     int y_pos = 0;
     for(FileData* data : file_data){
-        printf("Creating file '%s'\n", data->name.c_str());
-        printf("Full Path '%s' ", data->full_path.c_str());
         FileType type = getFileType(data);
         File* currfile;
         switch(type){
             case FileType::dir:
-                currfile = new Directory(data->name, renderer, y_pos);
+                currfile = new Directory(data->name, y_pos, data->full_path);
                 break;
             case FileType::exe:
-                currfile = new Executable(data->name, renderer, y_pos);
+                currfile = new Executable(data->name,  y_pos, data->full_path);
                 break;
             case FileType::code:
-                currfile = new Code(data->name, renderer, y_pos);
+                currfile = new Code(data->name,  y_pos, data->full_path);
                 break;
             case FileType::img:
-                currfile = new Image(data->name, renderer, y_pos);
+                currfile = new Image(data->name,  y_pos, data->full_path);
                 break;
             case FileType::vid:
-                currfile = new Video(data->name, renderer, y_pos);
+                currfile = new Video(data->name, y_pos, data->full_path);
                 break;
             default:
-                currfile = new File(data->name, y_pos);
+                currfile = new File(data->name, y_pos, data->full_path);
         }
         y_pos++;
         files.push_back(currfile);
@@ -244,26 +253,27 @@ FileType getFileType(FileData* file){
     if(file->name == "." || file->name == ".." || file->isDirectory){
         return FileType::dir;
     }else if(file->isExecuteble){
+        printf("name %s \n", file->name.c_str());
         return FileType::exe;
-    }else if(file->name.find(".jpg") ||
-             file->name.find(".jpeg")||
-             file->name.find(".png") ||
-             file->name.find(".tif") ||
-             file->name.find(".tiff"||
-             file->name.find(".gif"))){
+    }else if(file->name.find(".jpg") != std::string::npos ||
+             file->name.find(".jpeg")!= std::string::npos||
+             file->name.find(".png") != std::string::npos||
+             file->name.find(".tif") != std::string::npos||
+             file->name.find(".tiff") != std::string::npos||
+             file->name.find(".gif") != std::string::npos){
         return FileType::img;
-    }else if(file->name.find(".mp4") ||
-             file->name.find(".mov")||
-             file->name.find(".mkv") ||
-             file->name.find(".avi") ||
-             file->name.find(".webm")){
+    }else if(file->name.find(".mp4") != std::string::npos||
+             file->name.find(".mov") != std::string::npos||
+             file->name.find(".mkv") != std::string::npos||
+             file->name.find(".avi") != std::string::npos||
+             file->name.find(".webm")!= std::string::npos){
         return FileType::vid;        
-    }else if(file->name.find(".h") ||
-             file->name.find(".cpp")||
-             file->name.find(".c") ||
-             file->name.find(".py") ||
-             file->name.find(".java")||
-             file->name.find(".js")){
+    }else if(file->name.find(".h") != std::string::npos||
+             file->name.find(".cpp")!= std::string::npos||
+             file->name.find(".c") != std::string::npos||
+             file->name.find(".py") != std::string::npos||
+             file->name.find(".java")!= std::string::npos||
+             file->name.find(".js") != std::string::npos){
         return FileType::code;
     }else{
         return FileType::other;
