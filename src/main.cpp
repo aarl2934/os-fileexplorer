@@ -100,7 +100,7 @@ int main(int argc, char **argv)
                             event.button.x <= ph_rect.x + ph_rect.w &&
                             event.button.y >= ph_rect.y &&
                             event.button.y <= ph_rect.y + ph_rect.h){
-                                printf("Launching %s\n", file->getPath().c_str());
+                                
                                 current_directory = launch(file, current_directory);
                             }
                         }
@@ -110,11 +110,18 @@ int main(int argc, char **argv)
 
                 break;
             case SDL_MOUSEBUTTONUP:
-                //printf("mouse up %d\n", event.button.button);
-                data.penguin_selected = false;
-                data.phrase_selected = false;
 
                 break;
+            case SDL_MOUSEWHEEL:
+                if(event.wheel.y > 0 ){
+                    for(File* file : files){
+                        file->scrollUp();
+                    }
+                }else if(event.wheel.y < 0){
+                    for(File* file : files){
+                        file->scrollDown();
+                    }
+                }
         }
         render(renderer, files);
         if(prevdir != current_directory){ // directory changed, quit and resetup
@@ -155,11 +162,11 @@ void render(SDL_Renderer *renderer, std::vector<File*> files)
     
 
     for(File* file : files){
-        if(file->getY() > HEIGHT){
+        if(file->getY() > HEIGHT || file->getY() < 0){
             continue;
         }
-        SDL_RenderCopy(renderer, file->getIcon(), NULL, file->getIconRect());
-        SDL_RenderCopy(renderer, file->getPhrase(), NULL, file->getPhraseRect());
+        file->render(renderer);
+        
     }
     // show rendered frame
     SDL_RenderPresent(renderer);
@@ -183,8 +190,7 @@ std::string launch(File* file, std::string dirname){
         if(pid == 0){
             char* filename = new char[strlen(file->getPath().c_str())];
             strcpy(filename, file->getPath().c_str());
-            char *const* command_list = {(char *const*)filename};
-            printf("command list %s \t\n",command_list[0]);
+            char * command_list[2] = {filename, 0};
             execv(filename, command_list);
             exit(0);
         }
@@ -200,10 +206,7 @@ std::string launch(File* file, std::string dirname){
             printf("%s\n", filename);
             const char* xdg = "/usr/bin/xdg-open";
             char * command_list[3] = {(char *const)xdg, (char *const)filename, 0};//{(char *const)xdg, (char *const)filename};
-            printf("command list %s %s\n", command_list[0], command_list[1]);
             execv(xdg, command_list);
-            usleep(50000);
-            printf("Command launched");
             exit(0);
         }else if (pid == -1){
             fprintf(stderr, "Not able to fork");
@@ -296,7 +299,6 @@ FileType getFileType(FileData* file){
     if(file->name == "." || file->name == ".." || file->isDirectory){
         return FileType::dir;
     }else if(file->isExecuteble){
-        printf("name %s \n", file->name.c_str());
         return FileType::exe;
     }else if(file->name.find(".jpg") != std::string::npos ||
              file->name.find(".jpeg")!= std::string::npos||

@@ -23,6 +23,10 @@ public:
     File(std::string n, int y_pos, std::string full_path);
     ~File();
     void initialize(SDL_Renderer *renderer); //setup in here
+    void render(SDL_Renderer *renderer);
+
+    void scrollUp();
+    void scrollDown();
     //getters and setters
     SDL_Texture* getIcon();
     SDL_Texture* getPhrase(); 

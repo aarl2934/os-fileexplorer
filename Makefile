@@ -1,5 +1,5 @@
 CXX= g++
-CXXFLAGS= -std=c++11 -g -pthread
+CXXFLAGS= -std=c++11 -g 
 
 INCLUDE= -I/usr/include/SDL2 -I./include/
 LIB= -lSDL2 -lSDL2_image -lSDL2_ttf

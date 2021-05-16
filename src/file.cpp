@@ -52,6 +52,10 @@ void File::initialize(SDL_Renderer *renderer){
     }
     setIcon(img_surf, renderer);
 }
+void File::render(SDL_Renderer *renderer){
+    SDL_RenderCopy(renderer, icon, NULL, &icon_rect);
+    SDL_RenderCopy(renderer, phrase, NULL, &phrase_rect);
+}
 void File::setIcon(SDL_Surface *img_surf, SDL_Renderer *renderer){
     icon = SDL_CreateTextureFromSurface(renderer, img_surf);
     SDL_FreeSurface(img_surf);
@@ -64,6 +68,18 @@ void File::setIcon(SDL_Surface *img_surf, SDL_Renderer *renderer){
 
 int File::getY(){
     return y;
+}
+
+void File::scrollUp(){
+    y -= FILE_HEIGHT;
+    icon_rect.y = y;
+    phrase_rect.y = y;
+}
+
+void File::scrollDown(){
+    y += FILE_HEIGHT;
+    icon_rect.y = y;
+    phrase_rect.y = y;
 }
 
 std::string File::getPath(){
