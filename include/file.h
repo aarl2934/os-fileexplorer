@@ -21,18 +21,21 @@ private:
     std::string full_path;
 public:
     File(std::string n, int y_pos, std::string full_path);
-    void setIcon(SDL_Surface *img_surf, SDL_Renderer *renderer);
-    int getY();
-    int getX();
-    void setFileType(FileType ft);
-    void initialize(SDL_Renderer *renderer);
-    
+    ~File();
+    void initialize(SDL_Renderer *renderer); //setup in here
     //getters and setters
     SDL_Texture* getIcon();
     SDL_Texture* getPhrase(); 
     SDL_Rect* getIconRect();
     SDL_Rect* getPhraseRect();
     TTF_Font* getFont();
+    
+    void setIcon(SDL_Surface *img_surf, SDL_Renderer *renderer);
+    int getY();
+    std::string getPath();
+    void setFileType(FileType ft);
+    FileType getFileType();
+
 
 };
 

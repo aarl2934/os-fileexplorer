@@ -13,6 +13,13 @@ File::File(std::string n, int y_pos, std::string fp){
     full_path = fp;
     filetype = FileType::other;
 }
+
+File::~File(){
+        SDL_DestroyTexture(icon);    
+        SDL_DestroyTexture(phrase); 
+        TTF_CloseFont(font);
+}
+
 void File::initialize(SDL_Renderer *renderer){
     font = TTF_OpenFont("resrc/OpenSans-Regular.ttf", 18);
     SDL_Color color = {0, 0 , 0};
@@ -59,8 +66,12 @@ int File::getY(){
     return y;
 }
 
-int File::getX(){
-    return x;
+std::string File::getPath(){
+    return full_path;
+}
+
+FileType File::getFileType(){
+    return filetype;
 }
 
 void File::setFileType(FileType ft){

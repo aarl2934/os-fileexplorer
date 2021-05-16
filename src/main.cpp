@@ -8,7 +8,8 @@
 #include <sys/stat.h>
 #include <vector>
 #include <algorithm>
-
+#include <unistd.h>
+#include <sys/wait.h> 
 #define WIDTH 800
 #define HEIGHT 600
 
@@ -34,6 +35,7 @@ typedef struct FileData{
 void initialize(SDL_Renderer *renderer, std::vector<File*> files);
 void render(SDL_Renderer *renderer, std::vector<File*> files);
 void quit(std::vector<File*> files);
+std::string launch(File* file, std::string dirname);
 std::vector<FileData*> getFileData(std::string current_directory);
 std::vector<File*> createFiles(std::vector<FileData*> file_names, SDL_Renderer *renderer);
 FileType getFileType(FileData* file);
@@ -55,18 +57,16 @@ int main(int argc, char **argv)
     // initialize and perform rendering loop
     AppData data;
     std::string current_directory = home;
-
+    std::string prevdir = current_directory;
     std::vector<FileData*> file_names = getFileData(current_directory);
 
     std::vector<File*> files = createFiles(file_names, renderer);
 
     initialize(renderer, files);
-    printf("initialized\n");
     render(renderer, files);
-    printf("rendered\n");
     SDL_Event event;
     SDL_WaitEvent(&event);
-    
+    //XInitThreads();
     while (event.type != SDL_QUIT)
     {
         //list all the files in the current directory
@@ -81,37 +81,31 @@ int main(int argc, char **argv)
         switch(event.type){
             case SDL_MOUSEMOTION:
                 //printf("mouse move %d %d\n", event.motion.x, event.motion.y);
-                if(data.phrase_selected){
-                    data.phrase_rect.x = event.motion.x - data.offset.x;
-                    data.phrase_rect.y = event.motion.y - data.offset.y;
-                }else if(data.penguin_selected){
-                    data.penguin_rect.x = event.motion.x - data.offset.x; 
-                    data.penguin_rect.y = event.motion.y - data.offset.y;
-                }
+                // if(data.phrase_selected){
+                //     data.phrase_rect.x = event.motion.x - data.offset.x;
+                //     data.phrase_rect.y = event.motion.y - data.offset.y;
+                // }else if(data.penguin_selected){
+                //     data.penguin_rect.x = event.motion.x - data.offset.x; 
+                //     data.penguin_rect.y = event.motion.y - data.offset.y;
+                // }
                 break;
             case SDL_MOUSEBUTTONDOWN:
                 //printf("mouse down %d\n", event.button.button);
-                for(File* file : files){
-                    if(event.button.button == SDL_BUTTON_LEFT &&
-                    event.button.x >= data.phrase_rect.x &&
-                    event.button.x <= data.phrase_rect.x + data.phrase_rect.w &&
-                    event.button.y >= data.phrase_rect.y &&
-                    event.button.y <= data.phrase_rect.y + data.phrase_rect.h ){
-                        current_directory = 
-                        data.offset.x = event.button.x - data.phrase_rect.x;
-                        data.offset.y = event.button.y - data.phrase_rect.y;
-
-                    }else if(event.button.button == SDL_BUTTON_LEFT &&
-                    event.button.x >= data.penguin_rect.x &&
-                    event.button.x <= data.penguin_rect.x + data.penguin_rect.w &&
-                    event.button.y >= data.penguin_rect.y &&
-                    event.button.y <= data.penguin_rect.y + data.penguin_rect.h ){
-                        
-                        data.penguin_selected = true;
-                        data.offset.x = event.button.x - data.penguin_rect.x;
-                        data.offset.y = event.button.y - data.penguin_rect.y;
+            
+                    if(event.button.button == SDL_BUTTON_LEFT){
+                        for(File* file : files){
+                            SDL_Rect ph_rect = *file->getPhraseRect();
+                            if(
+                            event.button.x >= ph_rect.x &&
+                            event.button.x <= ph_rect.x + ph_rect.w &&
+                            event.button.y >= ph_rect.y &&
+                            event.button.y <= ph_rect.y + ph_rect.h){
+                                printf("Launching %s\n", file->getPath().c_str());
+                                current_directory = launch(file, current_directory);
+                            }
+                        }
                     }
-                }
+                
                 
 
                 break;
@@ -123,7 +117,14 @@ int main(int argc, char **argv)
                 break;
         }
         render(renderer, files);
-
+        if(prevdir != current_directory){ // directory changed, quit and resetup
+            quit(files);
+            file_names = getFileData(current_directory);
+            files = createFiles(file_names, renderer);
+            initialize(renderer, files);
+            render(renderer, files);
+        }
+        prevdir = current_directory;
     }
 
     // clean up
@@ -165,12 +166,54 @@ void render(SDL_Renderer *renderer, std::vector<File*> files)
 }
 
 void quit(std::vector<File*> files){
-    for(File* file : files){
-        SDL_DestroyTexture(file->getIcon());    
-        SDL_DestroyTexture(file->getPhrase());    
-        TTF_CloseFont(file->getFont());
+    int i = files.size();
+    while(files.size() > 0){
+        i--;
+        delete files[i];
+        files.pop_back();
     }
-    
+}
+std::string launch(File* file, std::string dirname){
+    FileType filetype = file->getFileType();
+    int pid;
+    switch (filetype)
+    {
+    case  exe:/* constant-expression */
+        pid = fork();
+        if(pid == 0){
+            char* filename = new char[strlen(file->getPath().c_str())];
+            strcpy(filename, file->getPath().c_str());
+            char *const* command_list = {(char *const*)filename};
+            printf("command list %s \t\n",command_list[0]);
+            execv(filename, command_list);
+            exit(0);
+        }
+        break;
+    case dir:
+        dirname = file->getPath();
+        break;
+    default:
+        pid = fork();
+        if(pid == 0){
+            char* filename = new char[strlen(file->getPath().c_str())];
+            strcpy(filename, file->getPath().c_str());
+            printf("%s\n", filename);
+            const char* xdg = "/usr/bin/xdg-open";
+            char * command_list[3] = {(char *const)xdg, (char *const)filename, 0};//{(char *const)xdg, (char *const)filename};
+            printf("command list %s %s\n", command_list[0], command_list[1]);
+            execv(xdg, command_list);
+            usleep(50000);
+            printf("Command launched");
+            exit(0);
+        }else if (pid == -1){
+            fprintf(stderr, "Not able to fork");
+        }else{
+            int status;
+            waitpid(pid, &status, 0);
+        }
+        break;
+    }
+    return dirname;
 }
 
 std::vector<FileData*> getFileData(std::string dirname){
