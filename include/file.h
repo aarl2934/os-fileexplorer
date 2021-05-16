@@ -10,15 +10,19 @@ enum FileType : uint8_t {dir, exe, img, vid, code, other};
 
 class File{
 private:
-    SDL_Texture *icon;
+    
     TTF_Font *font;
     SDL_Texture *phrase;
-    SDL_Rect icon_rect;
+    
     SDL_Rect phrase_rect;
-    int y;
+    SDL_Surface *image_surface;
     FileType filetype;
     std::string name;
     std::string full_path;
+protected:
+    int y;
+    SDL_Texture *icon;
+    SDL_Rect icon_rect;
 public:
     File(std::string n, int y_pos, std::string full_path);
     ~File();
@@ -33,8 +37,9 @@ public:
     SDL_Rect* getIconRect();
     SDL_Rect* getPhraseRect();
     TTF_Font* getFont();
-    
-    void setIcon(SDL_Surface *img_surf, SDL_Renderer *renderer);
+    void setIcon(SDL_Renderer *renderer);
+    void setImageSurf(SDL_Surface* img_surf);
+    void setFont(TTF_Font* f);
     int getY();
     std::string getPath();
     void setFileType(FileType ft);
@@ -47,6 +52,7 @@ public:
 class Executable: public File{
     public:
         Executable(std::string name, int y_pos, std::string full_path);
+        ~Executable();
 };
 
 

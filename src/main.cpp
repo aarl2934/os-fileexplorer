@@ -32,9 +32,10 @@ typedef struct FileData{
 
 }FileData;
 
-void initialize(SDL_Renderer *renderer, std::vector<File*> files);
+void initializeFiles(SDL_Renderer *renderer, std::vector<File*> files, SDL_Surface* dir_surf, SDL_Surface* exe_surf, SDL_Surface* code_surf, SDL_Surface* img_surf, SDL_Surface* vid_surf, SDL_Surface* other_surf, TTF_Font* font);
 void render(SDL_Renderer *renderer, std::vector<File*> files);
-void quit(std::vector<File*> files);
+void initialize();
+void close(std::vector<File*> files);
 std::string launch(File* file, std::string dirname);
 std::vector<FileData*> getFileData(std::string current_directory);
 std::vector<File*> createFiles(std::vector<FileData*> file_names, SDL_Renderer *renderer);
@@ -61,8 +62,16 @@ int main(int argc, char **argv)
     std::vector<FileData*> file_names = getFileData(current_directory);
 
     std::vector<File*> files = createFiles(file_names, renderer);
-
-    initialize(renderer, files);
+    SDL_Surface *dir_surf, *exe_surf, *code_surf, *img_surf, *vid_surf, *other_surf;
+    TTF_Font* font;
+    font = TTF_OpenFont("resrc/OpenSans-Regular.ttf", 18);
+    dir_surf = IMG_Load("resrc/directory.png");
+    exe_surf = IMG_Load("resrc/executable.png");
+    code_surf = IMG_Load("resrc/code.png");
+    vid_surf = IMG_Load("resrc/video.png");
+    img_surf = IMG_Load("resrc/image.png");
+    other_surf = IMG_Load("resrc/other.png");
+    initializeFiles(renderer, files, dir_surf, exe_surf, code_surf, img_surf, vid_surf, other_surf, font);
     render(renderer, files);
     SDL_Event event;
     SDL_WaitEvent(&event);
@@ -125,17 +134,25 @@ int main(int argc, char **argv)
         }
         render(renderer, files);
         if(prevdir != current_directory){ // directory changed, quit and resetup
-            quit(files);
+            close(files);
             file_names = getFileData(current_directory);
             files = createFiles(file_names, renderer);
-            initialize(renderer, files);
+            initializeFiles(renderer, files, dir_surf, exe_surf, code_surf, img_surf, vid_surf, other_surf, font);
             render(renderer, files);
         }
         prevdir = current_directory;
     }
 
     // clean up
-    quit(files);
+    close(files);
+    TTF_CloseFont(font);
+    SDL_FreeSurface(dir_surf);
+    SDL_FreeSurface(exe_surf);
+    SDL_FreeSurface(img_surf);
+    SDL_FreeSurface(code_surf);
+    SDL_FreeSurface(vid_surf);
+    SDL_FreeSurface(other_surf);
+
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     TTF_Quit();
@@ -145,12 +162,45 @@ int main(int argc, char **argv)
     return 0;
 }
 
-void initialize(SDL_Renderer *renderer, std::vector<File*> files)
+void initializeFiles(SDL_Renderer *renderer, std::vector<File*> files,  SDL_Surface* dir_surf, SDL_Surface* exe_surf, SDL_Surface* code_surf, SDL_Surface* img_surf, SDL_Surface* vid_surf, SDL_Surface* other_surf, TTF_Font* font)
 {
+    for(File* file : files){
+        FileType filetype = file->getFileType();
+        file->setFont(font);
+        switch(filetype){
+        case FileType::dir:
+            file->setImageSurf(dir_surf);
+            break;
+        case FileType::exe:
+            file->setImageSurf(exe_surf);
+            break;
+        case FileType::code:
+            file->setImageSurf(code_surf);
+            break;
+        case FileType::img:
+            file->setImageSurf(img_surf);
+            break;
+        case FileType::vid:
+            file->setImageSurf(vid_surf);
+            break;
+        default:
+            file->setImageSurf(other_surf);
+        }
+    }
     for(File* file : files){
         file->initialize(renderer);
     }
 }
+
+void close(std::vector<File*> files){
+    int i = files.size();
+    while(files.size() > 0){
+        i--;
+        delete files[i];
+        files.pop_back();
+    }
+}
+
 
 void render(SDL_Renderer *renderer, std::vector<File*> files)
 {
@@ -172,14 +222,7 @@ void render(SDL_Renderer *renderer, std::vector<File*> files)
     SDL_RenderPresent(renderer);
 }
 
-void quit(std::vector<File*> files){
-    int i = files.size();
-    while(files.size() > 0){
-        i--;
-        delete files[i];
-        files.pop_back();
-    }
-}
+
 std::string launch(File* file, std::string dirname){
     FileType filetype = file->getFileType();
     int pid;
