@@ -4,27 +4,42 @@
 #include <SDL_image.h>
 #include <SDL_ttf.h>
 #include <string>
+
 #define FILE_HEIGHT 30
 
 enum FileType : uint8_t {dir, exe, img, vid, code, other};
+
+typedef struct FileData{
+    mode_t permissions;
+    std::string name;
+    std::string full_path;
+    bool isExecuteble;
+    bool isDirectory;
+    int size;
+}FileData;
 
 class File{
 private:
     
     TTF_Font *font;
     SDL_Texture *phrase;
-    
+    SDL_Texture *size_phrase;
     SDL_Rect phrase_rect;
+    SDL_Texture *perm_phrase;
+    SDL_Rect perm_rect;
+    SDL_Rect size_rect;
     SDL_Surface *image_surface;
     FileType filetype;
     std::string name;
     std::string full_path;
+    mode_t permissions;
 protected:
     int y;
+    int size;
     SDL_Texture *icon;
     SDL_Rect icon_rect;
 public:
-    File(std::string n, int y_pos, std::string full_path);
+    File(FileData* data, int y_pos);
     ~File();
     void initialize(SDL_Renderer *renderer); //setup in here
     void render(SDL_Renderer *renderer);
@@ -44,6 +59,8 @@ public:
     std::string getPath();
     void setFileType(FileType ft);
     FileType getFileType();
+    std::string getSizeString();
+    std::string getPermissionString();
 
 
 };
@@ -51,29 +68,29 @@ public:
 //Subclasses for the file types
 class Executable: public File{
     public:
-        Executable(std::string name, int y_pos, std::string full_path);
+        Executable(FileData* data, int y_pos);
         ~Executable();
 };
 
 
 class Directory: public File{
     public:
-        Directory(std::string name, int y_pos, std::string full_path);
+        Directory(FileData* data, int y_pos);
 };
 
 class Video: public File{
     public:
-        Video(std::string name, int y_pos, std::string full_path);
+        Video(FileData* data, int y_pos);
 };
 
 
 class Image: public File{
     public:
-        Image(std::string name,  int y_pos, std::string full_path);
+        Image(FileData* data, int y_pos);
 };
 class Code: public File{
     public:
-        Code(std::string name, int y_pos, std::string full_path);
+        Code(FileData* data, int y_pos);
 };
 
 

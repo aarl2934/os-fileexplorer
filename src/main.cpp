@@ -24,13 +24,6 @@ typedef struct AppData{
     SDL_Point offset;
 }AppData;
 
-typedef struct FileData{
-    std::string name;
-    std::string full_path;
-    bool isExecuteble;
-    bool isDirectory;
-
-}FileData;
 
 void initializeFiles(SDL_Renderer *renderer, std::vector<File*> files, SDL_Surface* dir_surf, SDL_Surface* exe_surf, SDL_Surface* code_surf, SDL_Surface* img_surf, SDL_Surface* vid_surf, SDL_Surface* other_surf, TTF_Font* font);
 void render(SDL_Renderer *renderer, std::vector<File*> files);
@@ -105,8 +98,6 @@ int main(int argc, char **argv)
                         for(File* file : files){
                             SDL_Rect ph_rect = *file->getPhraseRect();
                             if(
-                            event.button.x >= ph_rect.x &&
-                            event.button.x <= ph_rect.x + ph_rect.w &&
                             event.button.y >= ph_rect.y &&
                             event.button.y <= ph_rect.y + ph_rect.h){
                                 
@@ -295,13 +286,13 @@ std::vector<FileData*> getFileData(std::string dirname){
             err = stat(full_path.c_str(), &fileinfo);
             filedata->isDirectory = false;
             filedata->isExecuteble = false;
-            if(err){
-
-            }else if(S_ISDIR(fileinfo.st_mode)){
+            if(S_ISDIR(fileinfo.st_mode)){
                 filedata->isDirectory = true;   
             }else if((fileinfo.st_mode & S_IEXEC) != 0){
                 filedata->isExecuteble = true;
             }
+            filedata->permissions = fileinfo.st_mode;
+            filedata->size = (int)fileinfo.st_size;
             file_list.push_back(filedata);
         }
     }
@@ -315,23 +306,24 @@ std::vector<File*> createFiles(std::vector<FileData*> file_data, SDL_Renderer *r
         File* currfile;
         switch(type){
             case FileType::dir:
-                currfile = new Directory(data->name, y_pos, data->full_path);
+                currfile = new Directory(data, y_pos);
                 break;
             case FileType::exe:
-                currfile = new Executable(data->name,  y_pos, data->full_path);
+                currfile = new Executable(data,  y_pos);
                 break;
             case FileType::code:
-                currfile = new Code(data->name,  y_pos, data->full_path);
+                currfile = new Code(data,  y_pos);
                 break;
             case FileType::img:
-                currfile = new Image(data->name,  y_pos, data->full_path);
+                currfile = new Image(data,  y_pos);
                 break;
             case FileType::vid:
-                currfile = new Video(data->name, y_pos, data->full_path);
+                currfile = new Video(data, y_pos);
                 break;
             default:
-                currfile = new File(data->name, y_pos, data->full_path);
+                currfile = new File(data, y_pos);
         }
+
         y_pos++;
         files.push_back(currfile);
     }
