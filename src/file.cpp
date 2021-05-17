@@ -16,6 +16,9 @@ File::File(FileData* data, int y_pos){
     size = data->size;
     permissions = data->permissions;
     filetype = FileType::other;
+    icon_rect.w = 18;
+    icon_rect.h = 25;
+    icon_rect.x = 5;
 }
 
 File::~File(){
@@ -76,10 +79,8 @@ void File::setFont(TTF_Font* f){
 }
 void File::setIcon(SDL_Renderer *renderer){
     icon = SDL_CreateTextureFromSurface(renderer, image_surface);
-    icon_rect.x = 0;
+    
     icon_rect.y = y;
-    icon_rect.w = 25;
-    icon_rect.h = 25;
 
 }
 
@@ -166,21 +167,39 @@ TTF_Font* File::getFont(){
 
 Executable::Executable(FileData* data, int y_pos):File(data, y_pos){
         setFileType(FileType::exe);
+        icon_rect.w = 25;
+        icon_rect.h = 25;
+        icon_rect.x = 0;
+
 }
 
 Directory::Directory(FileData* data, int y_pos):File(data, y_pos){
         setFileType(FileType::dir);
+        icon_rect.w = 25;
+        icon_rect.h = 25;
+        icon_rect.x = 0;
+
 }
 
 Video::Video(FileData* data, int y_pos):File(data, y_pos){
         setFileType(FileType::vid);
+        icon_rect.w = 25;
+        icon_rect.h = 20;
+        icon_rect.x = 0;
 
 }
 
 Image::Image(FileData* data, int y_pos):File(data, y_pos){
         setFileType(FileType::img);
+        icon_rect.w = 25;
+        icon_rect.h = 20;
+        icon_rect.x = 0;
 
 }
 Code::Code(FileData* data, int y_pos):File(data, y_pos){
         setFileType(FileType::code);
+        icon_rect.w = 25;
+        icon_rect.h = 25;
+        icon_rect.x = 0;
+
 }
